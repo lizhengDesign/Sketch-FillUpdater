@@ -13,5 +13,8 @@
     <item>
       <enclosure url="https://github.com/lizhengDesign/Sketch-FillUpdater/releases/download/v1.0.0/fill-updater.sketchplugin.zip" sparkle:version="1.0.0"/>
     </item>
+    <item>
+      <enclosure url="https://github.com/lizhengDesign/Sketch-FillUpdater/releases/download/v1.0.0/fill-updater.sketchplugin.zip" sparkle:version="1.0.0"/>
+    </item>
   </channel>
 </rss>

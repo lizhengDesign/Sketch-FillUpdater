@@ -1,0 +1,31 @@
+{
+  "name": "fill-updater",
+  "description": "",
+  "version": "1.0.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lizhengDesign/Sketch-FillUpdater.git"
+  },
+  "engines": {
+    "sketch": ">=49.0"
+  },
+  "skpm": {
+    "name": "Fill-Updater",
+    "manifest": "src/manifest.json",
+    "main": "fill-updater.sketchplugin",
+    "assets": [
+      "assets/**/*"
+    ],
+    "sketch-assets-file": "sketch-assets/icons.sketch"
+  },
+  "scripts": {
+    "build": "skpm-build",
+    "watch": "skpm-build --watch",
+    "start": "skpm-build --watch --run",
+    "postinstall": "npm run build && skpm-link"
+  },
+  "devDependencies": {
+    "@skpm/builder": "^0.7.0"
+  },
+  "author": "Li Zheng <>"
+}

@@ -1,5 +1,6 @@
 # build artifacts
 fill-updater.sketchplugin
+.zip
 
 # npm
 node_modules

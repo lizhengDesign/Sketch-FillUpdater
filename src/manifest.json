@@ -1,7 +1,7 @@
 {
   "name": "Fill Updater",
   "description": "Update fill pattern",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "identifier": "com.lzheng.fill.updater",
   "icon": "icon.png",
   "commands": [
@@ -14,7 +14,9 @@
     },
     {
       "name": "Settings",
+      "shortcut": "ctrl cmd alt u",
       "identifier": "settings",
+      "description": "Fill Updater settings",
       "script": "settings.js"
     }
   ],

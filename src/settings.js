@@ -8,24 +8,35 @@ const responseOptions = {
   CANCEL: 1002,
 };
 
-const imageScaleOptions = ["1", "2", "3"];
-
 const prefernceKey = {
-  IMAGE_SCALE: "image-scales",
+  IMAGE_SCALE: "imageScales",
   IS_FLOW_ON: "isFlowOn",
   IS_SIZESYNC_ON: "isSizeSyncOn",
+  SIZE_SYNC_TYPE: "sizeSyncType",
+};
+const imageScaleOptions = ["1", "2", "3"];
+const sizeSyncOptions = [
+  "Sync width & height",
+  "Keep width & sync aspect ratio",
+  "Do not update size",
+];
+
+const defaultSettings = {
+  imageScale: imageScaleOptions[0],
+  sizeSyncType: 0,
+  isFlowOn: false,
 };
 
 const panelSpec = {
   width: 300,
-  height: 160,
-  toggleFrame: 25,
+  height: 200,
+  lineHeight: 25,
 };
 
 let UIComponentRect = (y) =>
-  NSMakeRect(0, panelSpec.height - y, panelSpec.width, panelSpec.toggleFrame);
+  NSMakeRect(0, panelSpec.height - y, panelSpec.width, panelSpec.lineHeight);
 
-let layerSizeSyncToggle, flowCreationToggle, imageScaleDropdown;
+let flowCreationToggle, imageScaleDropdown, sizeSyncDropdown;
 
 function createLabel(positionY, text) {
   const label = NSTextField.alloc().initWithFrame(UIComponentRect(positionY));
@@ -83,33 +94,45 @@ export function createSettingPanel() {
   );
 
   // -----------------------------------
-  // Layer size sync and flow creation toggles
-  let toggleLabel = createLabel(100, "Other settings:");
-  layerSizeSyncToggle = createToggle(
+  // Size sync dropdown
+  let sizeSyncLabel = createLabel(100, "Target layer size:");
+  sizeSyncDropdown = createDropdown(
     120,
-    prefernceKey.IS_SIZESYNC_ON,
-    "Sync layer size"
+    sizeSyncOptions,
+    sizeSyncOptions[Settings.settingForKey(prefernceKey.SIZE_SYNC_TYPE)]
   );
+
+  // -----------------------------------
+  // Layer size sync and flow creation toggles
+  let toggleLabel = createLabel(170, "Other settings:");
   flowCreationToggle = createToggle(
-    145,
+    190,
     prefernceKey.IS_FLOW_ON,
-    "Toggle flows"
+    "Create flows"
   );
 
   view.addSubview(imageScaleLabel);
   view.addSubview(imageScaleDropdown);
 
+  view.addSubview(sizeSyncLabel);
+  view.addSubview(sizeSyncDropdown);
+
   view.addSubview(toggleLabel);
-  view.addSubview(layerSizeSyncToggle);
   view.addSubview(flowCreationToggle);
 
   return panel.runModal();
 }
 
 export function resetSettings() {
-  Settings.setSettingForKey(prefernceKey.IMAGE_SCALE, imageScaleOptions[0]);
-  Settings.setSettingForKey(prefernceKey.IS_SIZESYNC_ON, true);
-  Settings.setSettingForKey(prefernceKey.IS_FLOW_ON, true);
+  Settings.setSettingForKey(
+    prefernceKey.IMAGE_SCALE,
+    defaultSettings.imageScale
+  );
+  Settings.setSettingForKey(prefernceKey.IS_FLOW_ON, defaultSettings.isFlowOn);
+  Settings.setSettingForKey(
+    prefernceKey.SIZE_SYNC_TYPE,
+    defaultSettings.isFlowOn
+  );
   UI.message(`✅ Successfully updated`);
 }
 
@@ -117,10 +140,8 @@ export function updateSettings() {
   const imageScale =
     imageScaleOptions[imageScaleDropdown.indexOfSelectedItem()];
   Settings.setSettingForKey(prefernceKey.IMAGE_SCALE, imageScale);
-  Settings.setSettingForKey(
-    prefernceKey.IS_SIZESYNC_ON,
-    layerSizeSyncToggle.state()
-  );
+  const sizeSyncTypeIndex = sizeSyncDropdown.indexOfSelectedItem();
+  Settings.setSettingForKey(prefernceKey.SIZE_SYNC_TYPE, sizeSyncTypeIndex);
   Settings.setSettingForKey(
     prefernceKey.IS_FLOW_ON,
     flowCreationToggle.state()

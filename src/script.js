@@ -13,24 +13,48 @@ const layerType = {
 const overrideProperty = {
   IMAGE: "image",
 };
+const sizeSyncType = {
+  SYNC_BOTH: 0,
+  SYNC_WIDTH: 1,
+  SYNC_NEITHER: 2,
+};
 const preferences = {
   EXPORT_OPTIONS: {
-    scales: Settings.settingForKey("image-scales"),
+    scales:
+      Settings.settingForKey("imageScales") == undefined
+        ? "1"
+        : Settings.settingForKey("imageScales"),
     formats: "png",
     output: false,
   },
-  IS_FLOW_ON: Settings.settingForKey("isFlowOn"),
-  IS_SIZESYNC_ON: Settings.settingForKey("isSizeSyncOn"),
+  IS_FLOW_ON:
+    Settings.settingForKey("isFlowOn") == undefined
+      ? false
+      : Settings.settingForKey("isFlowOn"),
+  SIZE_SYNC_TYPE:
+    Settings.settingForKey("sizeSyncType") == undefined
+      ? sizeSyncType.SYNC_BOTH
+      : Settings.settingForKey("sizeSyncType"),
 };
 let shapeCounter = 0;
 let symbolCounter = 0;
 
-export function syncLayerSize(targetLayer, sourceArtboard) {
-  targetLayer.frame.width = sourceArtboard.frame.width;
-  targetLayer.frame.height = sourceArtboard.frame.height;
+function updateLayerSize(targetLayer, sourceArtboard, ratio) {
+  switch (preferences.SIZE_SYNC_TYPE) {
+    case sizeSyncType.SYNC_BOTH:
+      targetLayer.frame.width = sourceArtboard.frame.width;
+      targetLayer.frame.height = sourceArtboard.frame.height;
+      break;
+    case sizeSyncType.SYNC_WIDTH:
+      targetLayer.frame.height = targetLayer.frame.width / ratio;
+      break;
+    case sizeSyncType.SYNC_NEITHER:
+      break;
+    default:
+  }
 }
 
-export function updateFlowToSourceArtboard(targetLayer, sourceArtboard) {
+function updateFlowToSourceArtboard(targetLayer, sourceArtboard) {
   if (preferences.IS_FLOW_ON) {
     targetLayer.flow = { target: sourceArtboard };
   } else {
@@ -54,10 +78,11 @@ export default function () {
         const buffer = sketch.export(layer, preferences.EXPORT_OPTIONS);
         const newImg = sketch.createLayerFromData(buffer, "bitmap");
         const targetLayers = doc.getLayersNamed(layer.name);
+        const ratio = layer.frame.width / layer.frame.height;
 
         targetLayers.forEach((imglayer) => {
           if (id != imglayer.id && imglayer.type != layerType.ARTBOARD) {
-            if (preferences.IS_SIZESYNC_ON) syncLayerSize(imglayer, layer);
+            updateLayerSize(imglayer, layer, ratio);
             updateFlowToSourceArtboard(imglayer, layer);
 
             if (imglayer.type == layerType.SHAPEPATH) {
@@ -85,9 +110,7 @@ export default function () {
         });
 
         UI.message(
-          `✅ ${shapeCounter} layer(s) & ${symbolCounter} symbol(s) updated at scale of ${Settings.settingForKey(
-            "image-scales"
-          )}`
+          `✅ ${shapeCounter} layer(s) & ${symbolCounter} symbol(s) updated at scale of ${preferences.EXPORT_OPTIONS.scales}`
         );
       }
     });

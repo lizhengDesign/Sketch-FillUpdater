@@ -1,7 +1,7 @@
 {
   "name": "Fill Updater",
   "description": "Update fill pattern",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "identifier": "com.lzheng.fill.updater",
   "icon": "icon.png",
   "commands": [
@@ -9,7 +9,7 @@
       "name": "Update",
       "shortcut": "ctrl cmd u",
       "identifier": "update",
-      "description": "Update the filler with the content of same name artboards",
+      "description": "Update the filler with the content of same named artboards",
       "script": "script.js"
     },
     {

@@ -108,7 +108,7 @@ export function createSettingPanel() {
   flowCreationToggle = createToggle(
     190,
     prefernceKey.IS_FLOW_ON,
-    "Create flows"
+    "Create links (Can be used to navigate in Zeplin)"
   );
 
   view.addSubview(imageScaleLabel);

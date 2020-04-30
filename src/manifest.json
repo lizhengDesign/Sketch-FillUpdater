@@ -10,6 +10,7 @@
       "shortcut": "ctrl cmd u",
       "identifier": "update",
       "description": "Update the filler with the content of same named artboards",
+      "handler": "syncSameNameLayers",
       "script": "script.js"
     },
     {

@@ -1,7 +1,7 @@
 {
   "name": "Fill Updater",
   "description": "Update fill pattern",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "identifier": "com.lzheng.fill.updater",
   "icon": "icon.png",
   "commands": [

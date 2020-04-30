@@ -114,7 +114,7 @@ export function createSettingPanel() {
   copyBlockToggle = createToggle(
     210,
     prefernceKey.IS_COPY_ON,
-    "Show a copy block underneath the synced layers"
+    "List editable text underneath the synced layers"
   );
 
   view.addSubview(imageScaleLabel);

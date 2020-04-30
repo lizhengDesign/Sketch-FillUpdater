@@ -10,9 +10,9 @@ const responseOptions = {
 
 const prefernceKey = {
   IMAGE_SCALE: "imageScales",
-  IS_FLOW_ON: "isFlowOn",
-  IS_SIZESYNC_ON: "isSizeSyncOn",
   SIZE_SYNC_TYPE: "sizeSyncType",
+  IS_FLOW_ON: "isFlowOn",
+  IS_COPY_ON: "isCopyOn",
 };
 const imageScaleOptions = ["1", "2", "3"];
 const sizeSyncOptions = [
@@ -25,18 +25,19 @@ const defaultSettings = {
   imageScale: imageScaleOptions[0],
   sizeSyncType: 0,
   isFlowOn: false,
+  isCopyOn: false,
 };
 
 const panelSpec = {
   width: 300,
-  height: 200,
+  height: 220,
   lineHeight: 25,
 };
 
 let UIComponentRect = (y) =>
   NSMakeRect(0, panelSpec.height - y, panelSpec.width, panelSpec.lineHeight);
 
-let flowCreationToggle, imageScaleDropdown, sizeSyncDropdown;
+let imageScaleDropdown, sizeSyncDropdown, flowCreationToggle, copyBlockToggle;
 
 function createLabel(positionY, text) {
   const label = NSTextField.alloc().initWithFrame(UIComponentRect(positionY));
@@ -103,12 +104,17 @@ export function createSettingPanel() {
   );
 
   // -----------------------------------
-  // Layer size sync and flow creation toggles
+  // Link creation and copy block toggles
   let toggleLabel = createLabel(170, "Other settings:");
   flowCreationToggle = createToggle(
     190,
     prefernceKey.IS_FLOW_ON,
     "Create flows"
+  );
+  copyBlockToggle = createToggle(
+    210,
+    prefernceKey.IS_COPY_ON,
+    "Show a copy block underneath the synced layers"
   );
 
   view.addSubview(imageScaleLabel);
@@ -119,6 +125,7 @@ export function createSettingPanel() {
 
   view.addSubview(toggleLabel);
   view.addSubview(flowCreationToggle);
+  view.addSubview(copyBlockToggle);
 
   return panel.runModal();
 }
@@ -128,11 +135,13 @@ export function resetSettings() {
     prefernceKey.IMAGE_SCALE,
     defaultSettings.imageScale
   );
-  Settings.setSettingForKey(prefernceKey.IS_FLOW_ON, defaultSettings.isFlowOn);
   Settings.setSettingForKey(
     prefernceKey.SIZE_SYNC_TYPE,
-    defaultSettings.isFlowOn
+    defaultSettings.sizeSyncType
   );
+  Settings.setSettingForKey(prefernceKey.IS_FLOW_ON, defaultSettings.isFlowOn);
+  Settings.setSettingForKey(prefernceKey.IS_COPY_ON, defaultSettings.isCopyOn);
+
   UI.message(`✅ Successfully updated`);
 }
 
@@ -146,6 +155,7 @@ export function updateSettings() {
     prefernceKey.IS_FLOW_ON,
     flowCreationToggle.state()
   );
+  Settings.setSettingForKey(prefernceKey.IS_COPY_ON, copyBlockToggle.state());
   UI.message(`✅ Successfully updated`);
 }
 

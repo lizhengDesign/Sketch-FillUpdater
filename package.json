@@ -1,6 +1,6 @@
 {
   "name": "fill-updater",
-  "description": "",
+  "description": "A Sketch plugin that fills shapes or symbols with content of selected artboards",
   "version": "1.3.0",
   "repository": {
     "type": "git",
@@ -18,6 +18,12 @@
     ],
     "sketch-assets-file": "sketch-assets/icons.sketch"
   },
+  "prettier": {
+    "trailingComma": "es5",
+    "printWidth": 120,
+    "tabWidth": 4,
+    "semi": false
+  },
   "scripts": {
     "build": "skpm-build",
     "watch": "skpm-build --watch",
@@ -27,5 +33,5 @@
   "devDependencies": {
     "@skpm/builder": "^0.7.0"
   },
-  "author": "Li Zheng <>"
+  "author": "Li Zheng"
 }

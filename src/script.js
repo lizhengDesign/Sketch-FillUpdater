@@ -30,6 +30,8 @@ const preferences = {
             ? sizeSyncType.SYNC_BOTH
             : Settings.settingForKey("sizeSyncType"),
     IS_FLOW_ON: Settings.settingForKey("isFlowOn") == undefined ? false : Settings.settingForKey("isFlowOn"),
+    IS_CURRENT_PAGE_ONLY:
+        Settings.settingForKey("isCurrentPageOnly") == undefined ? false : Settings.settingForKey("isCurrentPageOnly"),
     IS_COPY_ON: Settings.settingForKey("isCopyOn") == undefined ? false : Settings.settingForKey("isCopyOn"),
 }
 const copyBlockSpec = {
@@ -216,7 +218,8 @@ export const syncSameNameLayers = () => {
             const ratio = sourceLayer.frame.width / sourceLayer.frame.height
 
             targetLayers.forEach((imglayer) => {
-                if (id != imglayer.id && imglayer.type != layerType.ARTBOARD) {
+                const canUpdate = preferences.IS_CURRENT_PAGE_ONLY ? imglayer.getParentPage().selected : true
+                if (canUpdate && id != imglayer.id && imglayer.type != layerType.ARTBOARD) {
                     updateLayerSize(imglayer, sourceLayer, ratio)
                     updateFlowToSourceArtboard(imglayer, sourceLayer)
                     updateCopyBlock(imglayer, sourceLayer)

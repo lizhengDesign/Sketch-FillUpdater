@@ -11,6 +11,7 @@ const prefernceKey = {
     SIZE_SYNC_TYPE: "sizeSyncType",
     IS_FLOW_ON: "isFlowOn",
     IS_COPY_ON: "isCopyOn",
+    IS_CURRENT_PAGE_ONLY: "isCurrentPageOnly",
 }
 const imageScaleOptions = ["1", "2", "3"]
 const sizeSyncOptions = ["Sync width & height", "Keep width & sync aspect ratio", "Do not update size"]
@@ -19,14 +20,15 @@ const defaultSettings = {
     sizeSyncType: 0,
     isFlowOn: false,
     isCopyOn: false,
+    isCurrentPageOnly: false,
 }
 const panelSpec = {
     width: 300,
-    height: 220,
+    height: 240,
     lineHeight: 25,
 }
 let UIComponentRect = (y) => NSMakeRect(0, panelSpec.height - y, panelSpec.width, panelSpec.lineHeight)
-let imageScaleDropdown, sizeSyncDropdown, flowCreationToggle, copyBlockToggle
+let imageScaleDropdown, sizeSyncDropdown, flowCreationToggle, currentPageOnlyToggle, copyBlockToggle
 
 const createLabel = (positionY, text) => {
     const label = NSTextField.alloc().initWithFrame(UIComponentRect(positionY))
@@ -90,7 +92,12 @@ export const createSettingPanel = () => {
     // Link creation and copy block toggles
     let toggleLabel = createLabel(170, "Other settings:")
     flowCreationToggle = createToggle(190, prefernceKey.IS_FLOW_ON, "Create links (Can be used to navigate in Zeplin)")
-    copyBlockToggle = createToggle(210, prefernceKey.IS_COPY_ON, "List editable text underneath the synced layers")
+    currentPageOnlyToggle = createToggle(
+        210,
+        prefernceKey.IS_CURRENT_PAGE_ONLY,
+        "Only update images in the current selected page"
+    )
+    copyBlockToggle = createToggle(230, prefernceKey.IS_COPY_ON, "List editable text underneath the synced layers")
 
     view.addSubview(imageScaleLabel)
     view.addSubview(imageScaleDropdown)
@@ -100,6 +107,7 @@ export const createSettingPanel = () => {
 
     view.addSubview(toggleLabel)
     view.addSubview(flowCreationToggle)
+    view.addSubview(currentPageOnlyToggle)
     view.addSubview(copyBlockToggle)
 
     return panel.runModal()
@@ -109,6 +117,7 @@ export const resetSettings = () => {
     Settings.setSettingForKey(prefernceKey.IMAGE_SCALE, defaultSettings.imageScale)
     Settings.setSettingForKey(prefernceKey.SIZE_SYNC_TYPE, defaultSettings.sizeSyncType)
     Settings.setSettingForKey(prefernceKey.IS_FLOW_ON, defaultSettings.isFlowOn)
+    Settings.setSettingForKey(prefernceKey.IS_CURRENT_PAGE_ONLY, defaultSettings.isCurrentPageOnly)
     Settings.setSettingForKey(prefernceKey.IS_COPY_ON, defaultSettings.isCopyOn)
 
     UI.message(`✅ Successfully updated`)
@@ -121,6 +130,7 @@ export const updateSettings = () => {
     Settings.setSettingForKey(prefernceKey.IMAGE_SCALE, imageScale)
     Settings.setSettingForKey(prefernceKey.SIZE_SYNC_TYPE, sizeSyncTypeIndex)
     Settings.setSettingForKey(prefernceKey.IS_FLOW_ON, flowCreationToggle.state())
+    Settings.setSettingForKey(prefernceKey.IS_CURRENT_PAGE_ONLY, currentPageOnlyToggle.state())
     Settings.setSettingForKey(prefernceKey.IS_COPY_ON, copyBlockToggle.state())
 
     UI.message(`✅ Successfully updated`)

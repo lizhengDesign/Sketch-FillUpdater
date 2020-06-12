@@ -95,7 +95,7 @@ export const createSettingPanel = () => {
     currentPageOnlyToggle = createToggle(
         210,
         prefernceKey.IS_CURRENT_PAGE_ONLY,
-        "Only update images in the current selected page"
+        "Only update fills in the current selected page"
     )
     copyBlockToggle = createToggle(230, prefernceKey.IS_COPY_ON, "List editable text underneath the synced layers")
 

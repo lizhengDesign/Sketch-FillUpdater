@@ -138,20 +138,14 @@ const updateCopyBlock = (targetLayer, sourceArtboard) => {
                         createCopyKeyValueGroup(targetLayer, layer.name, layer.text, copyBlockGroup)
                         break
                     case layerType.SYMBOLINSTANCE:
-                        const symbolDoc =
-                            layer.master.getLibrary() == null ? doc : layer.master.getLibrary().getDocument()
-
                         layer.overrides.forEach((override) => {
                             if (override.property == overrideProperty.TEXT && override.editable) {
-                                const path = override.path.split("/")
-                                let name = ""
-                                path.forEach((id) => {
-                                    if (symbolDoc.getLayerWithID(id) != undefined) {
-                                        name += symbolDoc.getLayerWithID(id).name + " - "
-                                    }
-                                })
-                                name = name.substr(0, name.length - 3)
-                                createCopyKeyValueGroup(targetLayer, name, override.value, copyBlockGroup)
+                                createCopyKeyValueGroup(
+                                    targetLayer,
+                                    layer.name + ": " + override.affectedLayer.name,
+                                    override.value,
+                                    copyBlockGroup
+                                )
                             }
                         })
                         break
@@ -204,7 +198,7 @@ const updateCopyBlock = (targetLayer, sourceArtboard) => {
 
 export const syncSameNameLayers = () => {
     if (selectedLayers.length === 0) {
-        UI.message("❌ Please select at least 1 artboard.")
+        UI.message("❌ Please select at least 1 artboard or layer.")
         return
     }
     selectedLayers.forEach((selectedLayer) => {
@@ -225,7 +219,7 @@ export const syncSameNameLayers = () => {
             const id = sourceLayer.id
             const buffer = sketch.export(sourceLayer, preferences.EXPORT_OPTIONS)
             const newImg = sketch.createLayerFromData(buffer, "bitmap")
-            const targetLayers = doc.getLayersNamed(sourceLayer.name)
+            const targetLayers = sourceLayer == selectedLayer ? doc.getLayersNamed(sourceLayer.name) : [selectedLayer]
             const ratio = sourceLayer.frame.width / sourceLayer.frame.height
 
             targetLayers.forEach((imglayer) => {

@@ -207,10 +207,21 @@ export const syncSameNameLayers = () => {
         UI.message("❌ Please select at least 1 artboard.")
         return
     }
-    selectedLayers.forEach((sourceLayer) => {
-        if (sourceLayer.type != layerType.ARTBOARD) {
-            UI.message("❌ Only content in artboards will be used for updating.")
-        } else {
+    selectedLayers.forEach((selectedLayer) => {
+        let sourceLayer = selectedLayer
+
+        if (selectedLayer.type != layerType.ARTBOARD) {
+            UI.message("Only content in artboards will be used for updating.")
+            const sourceLayers = doc.getLayersNamed(selectedLayer.name)
+            for (let i = 0; i < sourceLayers.length; i++) {
+                if (sourceLayers[i].type == layerType.ARTBOARD) {
+                    sourceLayer = sourceLayers[i]
+                    break
+                }
+            }
+        }
+
+        if (sourceLayer.type == layerType.ARTBOARD) {
             const id = sourceLayer.id
             const buffer = sketch.export(sourceLayer, preferences.EXPORT_OPTIONS)
             const newImg = sketch.createLayerFromData(buffer, "bitmap")

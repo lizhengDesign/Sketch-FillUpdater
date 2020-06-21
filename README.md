@@ -1,12 +1,12 @@
 # Sketch: Fill-Updater
 
-A Sketch plugin that fills shapes or symbols with content of selected artboards
+A Sketch plugin that fills shapes or symbols with the content of same-named artboards
 
 ## Installation
 
-- [Download](../../releases/latest/download/fill-updater.sketchplugin.zip) the latest release of the plugin
-- Un-zip
-- Double-click on fill-updater.sketchplugin
+-   [Download](../../releases/latest/download/fill-updater.sketchplugin.zip) the latest release of the plugin
+-   Un-zip
+-   Double-click on fill-updater.sketchplugin
 
 ## How to use
 

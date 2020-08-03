@@ -1,7 +1,7 @@
 {
   "name": "Fill Updater",
   "description": "A Sketch plugin that fills shapes or symbols with the content of same-named artboards",
-  "version": "1.3.5",
+  "version": "1.3.6",
   "identifier": "com.lzheng.fill.updater",
   "icon": "icon.png",
   "commands": [

@@ -21,18 +21,19 @@ const sizeSyncType = {
 }
 const preferences = {
     EXPORT_OPTIONS: {
-        scales: Settings.settingForKey("imageScales") == undefined ? "1" : Settings.settingForKey("imageScales"),
+        scales: Settings.settingForKey("imageScales") === undefined ? "1" : Settings.settingForKey("imageScales"),
         formats: "png",
         output: false,
     },
     SIZE_SYNC_TYPE:
-        Settings.settingForKey("sizeSyncType") == undefined
+        Settings.settingForKey("sizeSyncType") === undefined
             ? sizeSyncType.SYNC_BOTH
             : Settings.settingForKey("sizeSyncType"),
-    IS_FLOW_ON: Settings.settingForKey("isFlowOn") == undefined ? false : Settings.settingForKey("isFlowOn"),
+    IS_FLOW_ON: Settings.settingForKey("isFlowOn") === undefined ? false : Settings.settingForKey("isFlowOn"),
+    IS_UPDATE_BY_FLOW: Settings.settingForKey("isFlowOn") === 1,
     IS_CURRENT_PAGE_ONLY:
-        Settings.settingForKey("isCurrentPageOnly") == undefined ? false : Settings.settingForKey("isCurrentPageOnly"),
-    IS_COPY_ON: Settings.settingForKey("isCopyOn") == undefined ? false : Settings.settingForKey("isCopyOn"),
+        Settings.settingForKey("isCurrentPageOnly") === undefined ? false : Settings.settingForKey("isCurrentPageOnly"),
+    IS_COPY_ON: Settings.settingForKey("isCopyOn") === undefined ? false : Settings.settingForKey("isCopyOn"),
 }
 const copyBlockSpec = {
     secondaryMargin: 4,
@@ -89,7 +90,7 @@ const updateFlowToSourceArtboard = (targetLayer, sourceArtboard) => {
 
 const removeChildrenLayersNotNamed = (parent, name) => {
     parent.layers.forEach((sublayer) => {
-        if (sublayer.name != name) sublayer.remove()
+        if (sublayer.name !== name) sublayer.remove()
     })
     parent.adjustToFit()
 }
@@ -132,14 +133,14 @@ const updateCopyBlock = (targetLayer, sourceArtboard) => {
 
     if (preferences.IS_COPY_ON) {
         const createCopyBlock = (layer) => {
-            if (layer.layers == undefined) {
+            if (layer.layers === undefined) {
                 switch (layer.type) {
                     case layerType.TEXT:
                         createCopyKeyValueGroup(targetLayer, layer.name, layer.text, copyBlockGroup)
                         break
                     case layerType.SYMBOLINSTANCE:
                         layer.overrides.forEach((override) => {
-                            if (override.property == overrideProperty.TEXT && override.editable) {
+                            if (override.property === overrideProperty.TEXT && override.editable) {
                                 createCopyKeyValueGroup(
                                     targetLayer,
                                     layer.name + ": " + override.affectedLayer.name,
@@ -158,7 +159,7 @@ const updateCopyBlock = (targetLayer, sourceArtboard) => {
             }
         }
 
-        if (imgCopyGroup.name != imgCopyGroupName) {
+        if (imgCopyGroup.name !== imgCopyGroupName) {
             imgCopyGroup = new sketch.Group({
                 name: imgCopyGroupName,
                 parent: targetLayer.parent,
@@ -188,7 +189,7 @@ const updateCopyBlock = (targetLayer, sourceArtboard) => {
 
         copyBlockGroup.adjustToFit()
         imgCopyGroup.adjustToFit()
-    } else if (imgCopyGroup.name == imgCopyGroupName) {
+    } else if (imgCopyGroup.name === imgCopyGroupName) {
         removeChildrenLayersNotNamed(imgCopyGroup, targetLayer.name)
         targetLayer.parent = imgCopyGroup.parent
         targetLayer.frame = imgCopyGroup.frame
@@ -196,40 +197,45 @@ const updateCopyBlock = (targetLayer, sourceArtboard) => {
     }
 }
 
-export const syncSameNameLayers = () => {
+export const syncLayers = () => {
     if (selectedLayers.length === 0) {
         UI.message("❌ Please select at least 1 artboard or layer.")
         return
     }
+
     selectedLayers.forEach((selectedLayer) => {
         let sourceLayer = selectedLayer
 
-        if (selectedLayer.type != layerType.ARTBOARD) {
+        if (selectedLayer.type !== layerType.ARTBOARD) {
             UI.message("Only content in artboards will be used for updating.")
-            const sourceLayers = doc.getLayersNamed(selectedLayer.name)
+            const sourceLayers = preferences.IS_UPDATE_BY_FLOW
+                ? selectedLayer.flow
+                    ? [selectedLayer.flow.target]
+                    : []
+                : doc.getLayersNamed(selectedLayer.name)
             for (let i = 0; i < sourceLayers.length; i++) {
-                if (sourceLayers[i].type == layerType.ARTBOARD) {
+                if (sourceLayers[i].type === layerType.ARTBOARD) {
                     sourceLayer = sourceLayers[i]
                     break
                 }
             }
         }
 
-        if (sourceLayer.type == layerType.ARTBOARD) {
+        if (sourceLayer.type === layerType.ARTBOARD) {
             const id = sourceLayer.id
             const buffer = sketch.export(sourceLayer, preferences.EXPORT_OPTIONS)
             const newImg = sketch.createLayerFromData(buffer, "bitmap")
-            const targetLayers = sourceLayer == selectedLayer ? doc.getLayersNamed(sourceLayer.name) : [selectedLayer]
+            const targetLayers = sourceLayer === selectedLayer ? doc.getLayersNamed(sourceLayer.name) : [selectedLayer]
             const ratio = sourceLayer.frame.width / sourceLayer.frame.height
 
             targetLayers.forEach((imglayer) => {
                 const canUpdate = preferences.IS_CURRENT_PAGE_ONLY ? imglayer.getParentPage().selected : true
-                if (canUpdate && id != imglayer.id && imglayer.type != layerType.ARTBOARD) {
+                if (canUpdate && id !== imglayer.id && imglayer.type !== layerType.ARTBOARD) {
                     updateLayerSize(imglayer, sourceLayer, ratio)
                     updateFlowToSourceArtboard(imglayer, sourceLayer)
                     updateCopyBlock(imglayer, sourceLayer)
 
-                    if (imglayer.type == layerType.SHAPEPATH) {
+                    if (imglayer.type === layerType.SHAPEPATH) {
                         imglayer.style.fills = [
                             {
                                 pattern: {
@@ -240,9 +246,9 @@ export const syncSameNameLayers = () => {
                             },
                         ]
                         shapeCounter++
-                    } else if (imglayer.type == layerType.SYMBOLINSTANCE) {
+                    } else if (imglayer.type === layerType.SYMBOLINSTANCE) {
                         imglayer.overrides.forEach((override) => {
-                            if (override.property == overrideProperty.IMAGE) {
+                            if (override.property === overrideProperty.IMAGE) {
                                 imglayer.setOverrideValue(override, newImg.image)
                             }
                         })

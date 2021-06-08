@@ -1,3 +1,4 @@
+import dialog from "@skpm/dialog"
 const sketch = require("sketch")
 const Style = sketch.Style
 const Settings = sketch.Settings
@@ -30,7 +31,7 @@ const preferences = {
             ? sizeSyncType.SYNC_BOTH
             : Settings.settingForKey("sizeSyncType"),
     IS_FLOW_ON: Settings.settingForKey("isFlowOn") === undefined ? false : Settings.settingForKey("isFlowOn"),
-    IS_UPDATE_BY_FLOW: Settings.settingForKey("isFlowOn") === 1,
+    IS_UPDATE_BY_FLOW: Settings.settingForKey("updateType") === 1,
     IS_CURRENT_PAGE_ONLY:
         Settings.settingForKey("isCurrentPageOnly") === undefined ? false : Settings.settingForKey("isCurrentPageOnly"),
     IS_COPY_ON: Settings.settingForKey("isCopyOn") === undefined ? false : Settings.settingForKey("isCopyOn"),
@@ -197,6 +198,98 @@ const updateCopyBlock = (targetLayer, sourceArtboard) => {
     }
 }
 
+const syncArtboardContent = (sourceLayer, selectedLayer) => {
+    const id = sourceLayer.id
+    const buffer = sketch.export(sourceLayer, preferences.EXPORT_OPTIONS)
+    const newImg = sketch.createLayerFromData(buffer, "bitmap")
+    const targetLayers = sourceLayer === selectedLayer ? doc.getLayersNamed(sourceLayer.name) : [selectedLayer]
+    const ratio = sourceLayer.frame.width / sourceLayer.frame.height
+
+    targetLayers.forEach((imglayer) => {
+        const canUpdate = preferences.IS_CURRENT_PAGE_ONLY ? imglayer.getParentPage().selected : true
+        if (canUpdate && id !== imglayer.id && imglayer.type !== layerType.ARTBOARD) {
+            updateLayerSize(imglayer, sourceLayer, ratio)
+            updateFlowToSourceArtboard(imglayer, sourceLayer)
+            updateCopyBlock(imglayer, sourceLayer)
+
+            if (imglayer.type === layerType.SHAPEPATH) {
+                imglayer.style.fills = [
+                    {
+                        pattern: {
+                            patternType: Style.PatternFillType.Fit,
+                            image: newImg.image,
+                        },
+                        fillType: Style.FillType.pattern,
+                    },
+                ]
+                shapeCounter++
+            } else if (imglayer.type === layerType.SYMBOLINSTANCE) {
+                imglayer.overrides.forEach((override) => {
+                    if (override.property === overrideProperty.IMAGE) {
+                        imglayer.setOverrideValue(override, newImg.image)
+                    }
+                })
+                symbolCounter++
+            }
+        }
+    })
+}
+
+export const exportLayers = () => {
+    if (selectedLayers.length === 0) {
+        UI.message("❌ Please select at least 1 layer.")
+        return
+    }
+
+    const filePath = dialog.showSaveDialogSync(doc)
+
+    if (filePath) {
+        UI.getInputFromUser(
+            "What's the image scale do you want to export?",
+            {
+                initialValue: "1",
+                type: UI.INPUT_TYPE.selection,
+                possibleValues: ["1", "2", "3"],
+                description: "Depends on the amount of variations, it may take a few seconds...",
+            },
+            (err, value) => {
+                if (err) return
+
+                preferences.IS_UPDATE_BY_FLOW = false
+
+                const outputOptions = {
+                    formats: "png",
+                    scales: value,
+                    output: filePath,
+                }
+                selectedLayers.forEach((selectedLayer) => {
+                    if (selectedLayer.type === layerType.SHAPEPATH || selectedLayer.type === layerType.SYMBOLINSTANCE) {
+                        const locatedArtboard = selectedLayer.getParentArtboard()
+                        const locatedPage = selectedLayer.getParentPage()
+                        if (!locatedArtboard) return
+
+                        const sourceLayers = sketch.find(`Artboard,[name="${selectedLayer.name}"]`, locatedPage)
+                        const originalName = locatedArtboard.name.replace(/: */g, "_")
+                        const explorationName = selectedLayer.name.replace(/: */g, "_")
+
+                        sourceLayers.forEach((sourceLayer, index) => {
+                            locatedArtboard.name = originalName + "/" + explorationName + "-" + index
+                            sourceLayer.selected = true
+                            syncArtboardContent(sourceLayer, selectedLayer)
+                            sketch.export(locatedArtboard, outputOptions)
+                        })
+                        locatedArtboard.name = originalName
+                    }
+                })
+
+                UI.message(
+                    `✅ ${shapeCounter} layer(s) & ${symbolCounter} symbol(s) updated at scale of ${preferences.EXPORT_OPTIONS.scales}`
+                )
+            }
+        )
+    }
+}
+
 export const syncLayers = () => {
     if (selectedLayers.length === 0) {
         UI.message("❌ Please select at least 1 artboard or layer.")
@@ -222,44 +315,11 @@ export const syncLayers = () => {
         }
 
         if (sourceLayer.type === layerType.ARTBOARD) {
-            const id = sourceLayer.id
-            const buffer = sketch.export(sourceLayer, preferences.EXPORT_OPTIONS)
-            const newImg = sketch.createLayerFromData(buffer, "bitmap")
-            const targetLayers = sourceLayer === selectedLayer ? doc.getLayersNamed(sourceLayer.name) : [selectedLayer]
-            const ratio = sourceLayer.frame.width / sourceLayer.frame.height
-
-            targetLayers.forEach((imglayer) => {
-                const canUpdate = preferences.IS_CURRENT_PAGE_ONLY ? imglayer.getParentPage().selected : true
-                if (canUpdate && id !== imglayer.id && imglayer.type !== layerType.ARTBOARD) {
-                    updateLayerSize(imglayer, sourceLayer, ratio)
-                    updateFlowToSourceArtboard(imglayer, sourceLayer)
-                    updateCopyBlock(imglayer, sourceLayer)
-
-                    if (imglayer.type === layerType.SHAPEPATH) {
-                        imglayer.style.fills = [
-                            {
-                                pattern: {
-                                    patternType: Style.PatternFillType.Fit,
-                                    image: newImg.image,
-                                },
-                                fillType: Style.FillType.pattern,
-                            },
-                        ]
-                        shapeCounter++
-                    } else if (imglayer.type === layerType.SYMBOLINSTANCE) {
-                        imglayer.overrides.forEach((override) => {
-                            if (override.property === overrideProperty.IMAGE) {
-                                imglayer.setOverrideValue(override, newImg.image)
-                            }
-                        })
-                        symbolCounter++
-                    }
-                }
-            })
-
-            UI.message(
-                `✅ ${shapeCounter} layer(s) & ${symbolCounter} symbol(s) updated at scale of ${preferences.EXPORT_OPTIONS.scales}`
-            )
+            syncArtboardContent(sourceLayer, selectedLayer)
         }
     })
+
+    UI.message(
+        `✅ ${shapeCounter} layer(s) & ${symbolCounter} symbol(s) updated at scale of ${preferences.EXPORT_OPTIONS.scales}`
+    )
 }

@@ -264,6 +264,11 @@ export const exportLayers = () => {
                 }
                 selectedLayers.forEach((selectedLayer) => {
                     if (selectedLayer.type === layerType.SHAPEPATH || selectedLayer.type === layerType.SYMBOLINSTANCE) {
+                        const originalFlow = selectedLayer.flow
+                        const originalContent =
+                            selectedLayer.type === layerType.SHAPEPATH
+                                ? selectedLayer.style.fills
+                                : selectedLayer.overrides
                         const locatedArtboard = selectedLayer.getParentArtboard()
                         const locatedPage = selectedLayer.getParentPage()
                         if (!locatedArtboard) return
@@ -279,6 +284,12 @@ export const exportLayers = () => {
                             sketch.export(locatedArtboard, outputOptions)
                         })
                         locatedArtboard.name = originalName
+                        selectedLayer.flow = originalFlow
+                        if (selectedLayer.type === layerType.SHAPEPATH) {
+                            selectedLayer.style.fills = originalContent
+                        } else {
+                            selectedLayer.overrides.forEach((override, index) => (override = originalContent[index]))
+                        }
                     }
                 })
 

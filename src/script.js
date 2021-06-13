@@ -10,6 +10,7 @@ const layerType = {
     SHAPEPATH: "ShapePath",
     TEXT: "Text",
     SYMBOLINSTANCE: "SymbolInstance",
+    SYMBOLMASTER: "SymbolMaster",
 }
 const overrideProperty = {
     IMAGE: "image",
@@ -198,19 +199,19 @@ const updateCopyBlock = (targetLayer, sourceArtboard) => {
     }
 }
 
-const syncArtboardContent = (sourceLayer, selectedLayer) => {
-    const id = sourceLayer.id
-    const buffer = sketch.export(sourceLayer, preferences.EXPORT_OPTIONS)
+const syncArtboardContent = (sourceArtboard, selectedLayer) => {
+    const id = sourceArtboard.id
+    const buffer = sketch.export(sourceArtboard, preferences.EXPORT_OPTIONS)
     const newImg = sketch.createLayerFromData(buffer, "bitmap")
-    const targetLayers = sourceLayer === selectedLayer ? doc.getLayersNamed(sourceLayer.name) : [selectedLayer]
-    const ratio = sourceLayer.frame.width / sourceLayer.frame.height
+    const targetLayers = sourceArtboard === selectedLayer ? doc.getLayersNamed(sourceArtboard.name) : [selectedLayer]
+    const ratio = sourceArtboard.frame.width / sourceArtboard.frame.height
 
     targetLayers.forEach((imglayer) => {
         const canUpdate = preferences.IS_CURRENT_PAGE_ONLY ? imglayer.getParentPage().selected : true
         if (canUpdate && id !== imglayer.id && imglayer.type !== layerType.ARTBOARD) {
-            updateLayerSize(imglayer, sourceLayer, ratio)
-            updateFlowToSourceArtboard(imglayer, sourceLayer)
-            updateCopyBlock(imglayer, sourceLayer)
+            updateLayerSize(imglayer, sourceArtboard, ratio)
+            updateFlowToSourceArtboard(imglayer, sourceArtboard)
+            updateCopyBlock(imglayer, sourceArtboard)
 
             if (imglayer.type === layerType.SHAPEPATH) {
                 imglayer.style.fills = [
@@ -233,6 +234,40 @@ const syncArtboardContent = (sourceLayer, selectedLayer) => {
             }
         }
     })
+}
+
+const getOriginalData = (selectedLayer) => {
+    const locatedArtboard = selectedLayer.getParentArtboard()
+    if (!locatedArtboard) return undefined
+
+    const originalFlow = selectedLayer.flow
+    const originalContent =
+        selectedLayer.type === layerType.SHAPEPATH ? selectedLayer.style.fills : selectedLayer.overrides
+    const originalName = locatedArtboard ? locatedArtboard.name : undefined
+    const matchName = selectedLayer.name.substring(
+        0,
+        selectedLayer.name.indexOf("@") < 0 ? selectedLayer.name.length - 1 : selectedLayer.name.indexOf("@")
+    )
+    const variationName = matchName.trim().replace(/: */g, "_")
+
+    return {
+        locatedArtboard: locatedArtboard,
+        flow: originalFlow,
+        content: originalContent,
+        artboardName: originalName,
+        variationName: variationName,
+        matchName: matchName,
+    }
+}
+
+const retainOriginalData = (selectedLayer, originalData) => {
+    originalData.locatedArtboard.name = originalData.artboardName
+    selectedLayer.flow = originalData.flow
+    if (selectedLayer.type === layerType.SHAPEPATH) {
+        selectedLayer.style.fills = originalData.content
+    } else {
+        selectedLayer.overrides.forEach((override, index) => (override = originalData.content[index]))
+    }
 }
 
 export const exportLayers = () => {
@@ -262,36 +297,77 @@ export const exportLayers = () => {
                     scales: value,
                     output: filePath,
                 }
-                selectedLayers.forEach((selectedLayer) => {
-                    if (selectedLayer.type === layerType.SHAPEPATH || selectedLayer.type === layerType.SYMBOLINSTANCE) {
-                        const originalFlow = selectedLayer.flow
-                        const originalContent =
-                            selectedLayer.type === layerType.SHAPEPATH
-                                ? selectedLayer.style.fills
-                                : selectedLayer.overrides
-                        const locatedArtboard = selectedLayer.getParentArtboard()
-                        const locatedPage = selectedLayer.getParentPage()
-                        if (!locatedArtboard) return
 
-                        const sourceLayers = sketch.find(`Artboard,[name="${selectedLayer.name}"]`, locatedPage)
-                        const originalName = locatedArtboard.name.replace(/: */g, "_")
-                        const explorationName = selectedLayer.name.replace(/: */g, "_")
+                const locatedArtboard = selectedLayers.layers[0].getParentArtboard()
+                if (!locatedArtboard) return
 
-                        sourceLayers.forEach((sourceLayer, index) => {
-                            locatedArtboard.name = originalName + "/" + explorationName + "-" + index
-                            sourceLayer.selected = true
-                            syncArtboardContent(sourceLayer, selectedLayer)
-                            sketch.export(locatedArtboard, outputOptions)
+                const scope = preferences.IS_CURRENT_PAGE_ONLY ? locatedArtboard.getParentPage() : doc
+
+                const isSelectedLayersASetAndInOneArtboard = selectedLayers.reduce(
+                    (prev, curr) =>
+                        prev &&
+                        curr.name.includes("@") &&
+                        curr.getParentArtboard() &&
+                        curr.getParentArtboard().id === locatedArtboard.id,
+                    true
+                )
+
+                if (isSelectedLayersASetAndInOneArtboard) {
+                    let index = 0
+                    let isSetExisted = true
+
+                    const originalDataSet = selectedLayers.map((selectedLayer) => getOriginalData(selectedLayer))
+
+                    while (isSetExisted) {
+                        index++
+                        const sourceArtboards = []
+                        selectedLayers.forEach((selectedLayer, i) => {
+                            if (!isSetExisted) return
+                            const layerList = sketch.find(
+                                `Artboard,[name="${originalDataSet[i].matchName}${index}"]`,
+                                scope
+                            )
+                            if (layerList.length > 0) {
+                                sourceArtboards.push(layerList[0])
+                            } else isSetExisted = false
                         })
-                        locatedArtboard.name = originalName
-                        selectedLayer.flow = originalFlow
-                        if (selectedLayer.type === layerType.SHAPEPATH) {
-                            selectedLayer.style.fills = originalContent
-                        } else {
-                            selectedLayer.overrides.forEach((override, index) => (override = originalContent[index]))
+                        if (isSetExisted) {
+                            locatedArtboard.name =
+                                originalDataSet[0].artboardName.replace(/: */g, "_") +
+                                "/" +
+                                originalDataSet.map((data) => data.variationName).join("-") +
+                                "-" +
+                                index
+                            selectedLayers.forEach((selectedLayer, i) =>
+                                syncArtboardContent(sourceArtboards[i], selectedLayer)
+                            )
+                            sketch.export(locatedArtboard, outputOptions)
                         }
                     }
-                })
+
+                    selectedLayers.forEach((selectedLayer, i) => retainOriginalData(selectedLayer, originalDataSet[i]))
+                } else {
+                    selectedLayers.forEach((selectedLayer) => {
+                        if (
+                            selectedLayer.type === layerType.SHAPEPATH ||
+                            selectedLayer.type === layerType.SYMBOLINSTANCE
+                        ) {
+                            const originalData = getOriginalData(selectedLayer)
+                            if (!originalData) return
+
+                            const sourceArtboards = sketch.find(`Artboard,[name="${selectedLayer.name}"]`, scope)
+                            sourceArtboards.forEach((sourceArtboard, index) => {
+                                originalData.locatedArtboard.name =
+                                    originalData.artboardName + "/" + originalData.variationName + "-" + index
+                                sourceArtboard.selected = true
+                                syncArtboardContent(sourceArtboard, selectedLayer)
+                                sketch.export(originalData.locatedArtboard, outputOptions)
+                            })
+
+                            retainOriginalData(selectedLayer, originalData)
+                        }
+                    })
+                }
 
                 UI.message(
                     `✅ ${shapeCounter} layer(s) & ${symbolCounter} symbol(s) updated at scale of ${preferences.EXPORT_OPTIONS.scales}`

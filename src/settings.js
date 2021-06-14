@@ -16,7 +16,7 @@ const prefernceKey = {
 }
 const updateTypeOptions = ["Layer Name", "Prototpye Link"]
 const imageScaleOptions = ["1", "2", "3"]
-const sizeSyncOptions = ["Sync width & height", "Keep width & sync aspect ratio", "Do not update size"]
+const sizeSyncOptions = ["Sync width & height", "Keep width & retain aspect ratio", "Do not update size"]
 
 const defaultSettings = {
     updateType: updateTypeOptions[0],

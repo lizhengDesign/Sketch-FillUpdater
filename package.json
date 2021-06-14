@@ -1,7 +1,7 @@
 {
   "name": "fill-updater",
   "description": "A Sketch plugin that fills shapes or symbols with content of selected artboards",
-  "version": "1.3.10",
+  "version": "1.3.11",
   "repository": {
     "type": "git",
     "url": "https://github.com/lizhengDesign/Sketch-FillUpdater.git"

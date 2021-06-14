@@ -246,7 +246,7 @@ const getOriginalData = (selectedLayer) => {
     const originalName = locatedArtboard ? locatedArtboard.name : undefined
     const matchName = selectedLayer.name.substring(
         0,
-        selectedLayer.name.indexOf("@") < 0 ? selectedLayer.name.length - 1 : selectedLayer.name.indexOf("@")
+        selectedLayer.name.indexOf("@") < 0 ? selectedLayer.name.length : selectedLayer.name.indexOf("@")
     )
     const variationName = matchName.trim().replace(/: */g, "_")
 
@@ -268,6 +268,28 @@ const retainOriginalData = (selectedLayer, originalData) => {
     } else {
         selectedLayer.overrides.forEach((override, index) => (override = originalData.content[index]))
     }
+}
+
+const swapContentInArray = (array, id1, id2) => {
+    let tempItem = array[id1]
+    array[id1] = array[id2]
+    array[id2] = tempItem
+}
+
+const sortArtboardTBLR = (artboards) => {
+    let sortedArtboards = [...artboards]
+    for (let i = 0; i < sortedArtboards.length - 1; i++) {
+        for (let j = 0; j < sortedArtboards.length - i - 1; j++) {
+            if (sortedArtboards[j].frame.y > sortedArtboards[j + 1].frame.y)
+                swapContentInArray(sortedArtboards, j, j + 1)
+            else if (
+                sortedArtboards[j].frame.y === sortedArtboards[j + 1].frame.y &&
+                sortedArtboards[j].frame.x > sortedArtboards[j + 1].frame.x
+            )
+                swapContentInArray(sortedArtboards, j, j + 1)
+        }
+    }
+    return sortedArtboards
 }
 
 export const exportLayers = () => {
@@ -344,7 +366,6 @@ export const exportLayers = () => {
                             sketch.export(locatedArtboard, outputOptions)
                         }
                     }
-
                     selectedLayers.forEach((selectedLayer, i) => retainOriginalData(selectedLayer, originalDataSet[i]))
                 } else {
                     selectedLayers.forEach((selectedLayer) => {
@@ -355,7 +376,9 @@ export const exportLayers = () => {
                             const originalData = getOriginalData(selectedLayer)
                             if (!originalData) return
 
-                            const sourceArtboards = sketch.find(`Artboard,[name="${selectedLayer.name}"]`, scope)
+                            const sourceArtboards = sortArtboardTBLR(
+                                sketch.find(`Artboard,[name="${selectedLayer.name}"]`, scope)
+                            )
                             sourceArtboards.forEach((sourceArtboard, index) => {
                                 originalData.locatedArtboard.name =
                                     originalData.artboardName + "/" + originalData.variationName + "-" + index

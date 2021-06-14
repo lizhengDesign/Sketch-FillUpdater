@@ -7,7 +7,7 @@
   "commands": [
     {
       "name": "Update",
-      "shortcut": "ctrl cmd u",
+      "shortcut": "ctrl cmd w",
       "identifier": "update",
       "description": "Update the filler with the content of same-named or linked artboards",
       "handler": "syncLayers",
@@ -15,7 +15,7 @@
     },
     {
       "name": "Export all variations by selected layers",
-      "shortcut": "ctrl cmd shift u",
+      "shortcut": "ctrl cmd shift w",
       "identifier": "export",
       "description": "Export artboards where the selected layers are located with all variations",
       "handler": "exportLayers",
@@ -23,7 +23,7 @@
     },
     {
       "name": "Settings",
-      "shortcut": "ctrl cmd alt u",
+      "shortcut": "ctrl cmd alt w",
       "identifier": "settings",
       "description": "Fill Updater settings",
       "script": "settings.js"

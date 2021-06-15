@@ -10,16 +10,36 @@ A Sketch plugin that fills shapes or symbols with the content of same-named artb
 
 ## How to use
 
-Rename the target shapes or symbols to the same name as the original artboard's.
+### Update content by layer names
+
+Rename the target shapes or symbols to the same name as the source artboard's.
+
+### Update content by prototype links
+
+Use the Prototpye link feature to build the connection between source and target.
 
 ### 1. Update
 
-Select the source and use the update feature to push. Select the desired instances and use the update feature to pull.
+#### Same layer name
+
+> Select source artboards or target elements and use the update feature to sync content.
 
 <img src="./assets/update.gif" alt="Update Demo" width="800">
 
-### 2. Get Spec via Zeplin with Link
+#### Prototpye link
 
-After exporting the source screen and the collages board with the instance to Zeplin, the linking feature can be used by pressing and holding the SHIFT key.
+> Select target elements and use the update feature to sync content.
+
+<img src="./assets/link.gif" alt="Update Demo" width="800">
+
+### 2. Export Variations
+
+Ensure variation artboards and the element share the same name. Select the element and export.
+
+<img src="./assets/export.gif" alt="Zeplin Demo" width="800">
+
+### 3. Get Spec via Zeplin with Link
+
+After exporting the source screens and the collages board with the instance to Zeplin, the linking feature can be used as navigation by pressing and holding the SHIFT key.
 
 <img src="./assets/zeplin.gif" alt="Zeplin Demo" width="800">

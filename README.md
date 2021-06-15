@@ -10,25 +10,21 @@ A Sketch plugin that fills shapes or symbols with the content of same-named artb
 
 ## How to use
 
-### Update content by layer names
+-   Update content by same layer names
 
-Rename the target shapes or symbols to the same name as the source artboard's.
-
-### Update content by prototype links
-
-Use the Prototpye link feature to build the connection between source and target.
+-   Update content by prototype links
 
 ### 1. Update
 
 #### Same layer name
 
-> Select source artboards or target elements and use the update feature to sync content.
+> Ensure source artboards and target elements share the same name, select desired source or target, and use the update feature to sync content.
 
 <img src="./assets/update.gif" alt="Update Demo" width="800">
 
 #### Prototpye link
 
-> Select target elements and use the update feature to sync content.
+> Use the Prototype link to build the connections between source and target, select target elements, and use the update feature to sync content.
 
 <img src="./assets/link.gif" alt="Update Demo" width="800">
 

@@ -11,7 +11,6 @@ A Sketch plugin that fills shapes or symbols with the content of same-named artb
 ## How to use
 
 -   Update content by same layer names
-
 -   Update content by prototype links
 
 ### 1. Update
